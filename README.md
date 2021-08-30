@@ -6,13 +6,13 @@ Registration/Login/logout forms test task from CodeIT
 
 ## Database tables =>
 1. user = {
-* userId : int,
-* email : varchar(45),
-* login : varchar(45),
-* name : varchar(45),
-* password : varchar(200),
-* birthdate : varchar(45),
-* registerdate : bigint
+    * userId : int,
+    * email : varchar(45),
+    * login : varchar(45),
+    * name : varchar(45),
+    * password : varchar(200),
+    * birthdate : varchar(45),
+    * registerdate : bigint
 };
 
 2. token = {
