@@ -1,0 +1,32 @@
+# const { email, login, name, password,birthDate,country } = req.body
+POST http://localhost:3000/api/register
+Content-Type: application/json
+
+{
+    "email":"anton@gmail.com",
+    "login":"antonLogin",
+    "name":"Anton",
+    "password":"anton",
+    "birthDate":"10.01.2005",
+    "country":"USA"
+}
+###
+
+# const { email / login, password } = req.body
+POST http://localhost:3000/api/login
+Content-Type: application/json
+
+{
+    "emailOrLogin":"anton@gmail.com",
+    "password":"anton"
+}
+
+###
+GET http://localhost:3000/api/users
+###
+
+GET http://localhost:3000/api/user/anton@gmail.com
+###
+
+DELETE http://localhost:3000/api/logout/29
+###

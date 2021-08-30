@@ -1,0 +1,30 @@
+{
+	"name": "codeit-fullstacktesttask",
+	"version": "1.0.0",
+	"description": "Registration/Login/logout forms test task from CodeIT",
+	"main": "app.js",
+	"scripts": {
+		"start:dev": "nodemon app.js"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/KDVFirehawk/CodeIt-FullstackTestTask.git"
+	},
+	"type": "module",
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/KDVFirehawk/CodeIt-FullstackTestTask/issues"
+	},
+	"homepage": "https://github.com/KDVFirehawk/CodeIt-FullstackTestTask#readme",
+	"dependencies": {
+		"bcryptjs": "^2.4.3",
+		"express": "^4.17.1",
+		"jsonwebtoken": "^8.5.1",
+		"mysql2": "^2.3.0"
+	},
+	"devDependencies": {
+		"nodemon": "^2.0.12"
+	}
+}
