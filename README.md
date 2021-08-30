@@ -2,7 +2,7 @@
 
 Registration/Login/logout forms test task from CodeIT
 
-Project starts with command => npm run start:dev
+##Project starts with command => npm run start:dev
 
 ## Database tables =>
 1. user = {
