@@ -1,53 +1,32 @@
 import bcryptjs from 'bcryptjs';
 import config from '../config.js';
 import sqlPool from '../database/mySqlConnection.js';
-import ValidationHelper from '../helpers/ValidationHelper.js';
-import UserExceptions from '../exceptions/UserExceptions.js';
-import printError from '../helpers/PrintError.js';
+import { NotFoundError, AuthorizationError } from '../exceptions/Exceptions.js';
 
 class UserDBService {
 	async addUser(user) {
-		try {
-			const registerDate = Date.now();
-			const hashedPassword = bcryptjs.hashSync(user.password, config.app.bcryptSalt);
+		const registerDate = Date.now();
+		const hashedPassword = bcryptjs.hashSync(user.password, config.app.bcryptSalt);
 
-			const values = `'${user.email}','${user.login}','${user.name}','${hashedPassword}',
-			'${user.birthDate}','${user.country}',${registerDate}`;
+		const values = `'${user.email}','${user.login}','${user.name}','${hashedPassword}',
+		'${user.birthDate}','${user.country}',${registerDate}`;
 
-			await sqlPool.execute(
-				`INSERT user(email,login,name,password,birthdate,country,registerdate) ` +
-					`VALUES (${values})`,
-			);
-		} catch (e) {
-			printError(e, 'UserDBService addUser');
-			throw e;
-		}
+		await sqlPool.execute(
+			`INSERT user(email,login,name,password,birthdate,country,registerdate) ` +
+				`VALUES (${values})`,
+		);
 	}
-	async getAllUsersFullInfo() {
-		try {
-			const users = await sqlPool.execute('SELECT * FROM user');
-			if (!users[0].length) throw UserExceptions.userNotFound();
 
-			return users[0];
-		} catch (e) {
-			printError(e, 'UserDBService getAllUsersFullInfo');
-			throw e;
-		}
-	}
-	async getAllUsersSafeInfo() {
-		try {
-			const allUsersRaw = await this.getAllUsersFullInfo();
-			if (!allUsersRaw) throw UserExceptions.userNotFound();
+	async getAllUsers() {
+		const usersRaw = await sqlPool.execute('SELECT * FROM user');
+		if (!usersRaw[0].length) throw new NotFoundError('Users not found');
 
-			const allUsersSafe = allUsersRaw.map((user) => {
-				return this.convertUserToSafeInfo(user);
-			});
-			return allUsersSafe;
-		} catch (e) {
-			printError(e, 'UserDBService getAllUsersSafeInfo');
-			throw e;
-		}
+		const usersProcessed = usersRaw[0].map((user) => {
+			return this.convertUserInfoToSafe(user);
+		});
+		return usersProcessed;
 	}
+
 	/**
 	 * @param {string} emailOrLogin
 	 * @returns {object} user
@@ -55,64 +34,46 @@ class UserDBService {
 	 * Function gets user email or login, then checks is it email or login?
 	 * Then finds user in DB => returns object than contains user object
 	 */
-	async getUserFullInfo(emailOrLogin) {
-		try {
-			if (emailOrLogin.length < 5) UserExceptions.userValidation();
+	async getUser(emailOrLogin) {
+		const userRaw = await sqlPool.execute(
+			`SELECT * FROM user WHERE email = '${emailOrLogin}' OR login ='${emailOrLogin}'`,
+		);
+		if (!userRaw[0].length) throw new NotFoundError('User not found');
 
-			const whereEmailOrLogin = ValidationHelper.emailValidation(emailOrLogin)
-				? 'email'
-				: 'login';
-
-			const user = await sqlPool.execute(
-				`SELECT * FROM user WHERE ${whereEmailOrLogin} = '${emailOrLogin}'`,
-			);
-			if (!user[0].length) UserExceptions.userNotFound();
-
-			return user[0][0];
-		} catch (e) {
-			printError(e, 'UserDBService getUserFullInfo');
-			throw e;
-		}
+		const userSafeInfo = this.convertUserInfoToSafe(userRaw[0][0]);
+		return userSafeInfo;
 	}
-	async getUserSafeInfo(emailOrLogin) {
-		try {
-			const userFullInfo = await this.getUserFullInfo(emailOrLogin);
 
-			const userSafeInfo = this.convertUserToSafeInfo(userFullInfo);
-
-			return userSafeInfo;
-		} catch (e) {
-			printError(e, 'UserDBService getUserSafeInfo');
-			throw e;
-		}
-	}
 	async isUserAlreadyExists(email, login) {
 		try {
-			const user = await sqlPool.execute(
-				`SELECT * FROM user WHERE email = '${email}' AND login = '${login}'`,
-			);
-			if (!user[0].length) return false;
+			await this.getUser(email);
+			await this.getUser(login);
 
-			const safeUser = this.convertUserToSafeInfo(user[0][0]);
-			return safeUser;
+			return true;
 		} catch (e) {
-			printError(e, 'UserDBService isUserAlreadyExists');
-			throw e;
+			if (e instanceof NotFoundError) return false;
 		}
 	}
-	convertUserToSafeInfo(user) {
-		try {
-			return {
-				userId: user.userId,
-				email: user.email,
-				login: user.login,
-				name: user.name,
-				country: user.country,
-			};
-		} catch (e) {
-			printError(e, 'UserDBService convertUserToSafeInfo');
-			throw e;
-		}
+
+	async compareUserPassword(emailOrLogin, password) {
+		const userRaw = await sqlPool.execute(
+			`SELECT * FROM user WHERE email = '${emailOrLogin}' OR login ='${emailOrLogin}'`,
+		);
+		if (!userRaw[0].length) throw new AuthorizationError();
+
+		const checkPassword = await bcryptjs.compare(password, userRaw[0][0].password);
+		if (!checkPassword) throw new AuthorizationError();
+	}
+
+	convertUserInfoToSafe(user) {
+		return {
+			userId: user.userId,
+			email: user.email,
+			login: user.login,
+			name: user.name,
+			country: user.country,
+			birthdate: user.birthdate,
+		};
 	}
 }
 

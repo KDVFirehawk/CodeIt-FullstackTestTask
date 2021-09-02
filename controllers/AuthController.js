@@ -1,88 +1,74 @@
-import bcryptjs from 'bcryptjs';
 import UserDBService from '../services/UserDBService.js';
 import TokenDBService from '../services/TokenDBService.js';
 import SignTokenHelper from '../helpers/SignTokenHelper.js';
-import printError from '../helpers/PrintError.js';
+import { AlreadyExistsError } from '../exceptions/Exceptions.js';
 
 class AuthController {
 	async register(req, res) {
-		try {
-			const { email, login, name, password, birthDate, country } = req.body;
+		const { email, login, name, password, birthDate, country } = req.body;
 
-			//TODO EXIST
-			await UserDBService.addUser({
-				email,
-				login,
-				name,
-				password,
-				birthDate,
-				country,
-			});
+		const isUserAlreadyExists = await UserDBService.isUserAlreadyExists(email, login);
+		if (isUserAlreadyExists) throw new AlreadyExistsError('User already exists!');
 
-			const { accessToken, refreshToken } = await SignTokenHelper.newAccessRefresh({
-				email,
-				login,
-				name,
-				country,
-			});
+		await UserDBService.addUser({
+			email,
+			login,
+			name,
+			password,
+			birthDate,
+			country,
+		});
 
-			const userSafeInfo = await UserDBService.getUserSafeInfo(email);
+		const { accessToken, refreshToken } = await SignTokenHelper.newAccessRefresh({
+			email,
+			login,
+			name,
+			country,
+			birthDate,
+		});
 
-			await TokenDBService.newRefreshToken(userSafeInfo.userId, refreshToken);
+		const createdUser = await UserDBService.getUser(email);
 
-			return res.json({
-				createdUser: userSafeInfo,
-				accessToken,
-				refreshToken,
-			});
-		} catch (e) {
-			printError(e, 'AuthController register');
-			return res.status(500).json({ Error: 'Registration error' });
-		}
+		await TokenDBService.newRefreshToken(createdUser.userId, refreshToken);
+
+		return res.json({
+			user: createdUser,
+			accessToken,
+			refreshToken,
+		});
 	}
 
 	async login(req, res) {
-		try {
-			const { emailOrLogin, password } = req.body;
+		const { emailOrLogin, password } = req.body;
 
-			const userFullInfo = await UserDBService.getUserFullInfo(emailOrLogin);
+		await UserDBService.compareUserPassword(emailOrLogin, password);
 
-			const checkPassword = bcryptjs.compare(password, userFullInfo.password);
-			if (!checkPassword) return res.status(400).json({ Error: 'Wrong email or password' });
+		const user = await UserDBService.getUser(emailOrLogin);
 
-			const { accessToken, refreshToken } = await SignTokenHelper.newAccessRefresh({
-				email: userFullInfo.email,
-				login: userFullInfo.login,
-				name: userFullInfo.name,
-				country: userFullInfo.country,
-			});
+		const { accessToken, refreshToken } = await SignTokenHelper.newAccessRefresh({
+			email: user.email,
+			login: user.login,
+			name: user.name,
+			country: user.country,
+		});
 
-			await TokenDBService.updateRefreshToken(userFullInfo.userId, refreshToken);
+		await TokenDBService.updateRefreshToken(user.userId, refreshToken);
 
-			const userSafeInfo = await UserDBService.getUserSafeInfo(userFullInfo.email);
+		const userSafeInfo = await UserDBService.getUser(user.email);
 
-			return res.json({
-				user: userSafeInfo,
-				accessToken,
-				refreshToken,
-			});
-		} catch (e) {
-			printError(e, 'AuthController login');
-			if (e.type === 'user404') return res.status(404).json({ Error: 'User not found' });
-			return res.status(500).json({ Error: 'Server error' });
-		}
+		return res.json({
+			user: userSafeInfo,
+			accessToken,
+			refreshToken,
+		});
 	}
 
 	async logout(req, res) {
-		try {
-			const { id } = req.params;
+		const { id } = req.params;
 
-			await TokenDBService.updateRefreshToken(id, null);
-			res.status(200).end();
-		} catch (e) {
-			printError(e, 'AuthController logout');
-			res.status(500).json({ Error: 'Server error' });
-		}
+		await TokenDBService.getRefreshToken(id);
+		await TokenDBService.updateRefreshToken(id, null);
+		res.status(200).end();
 	}
 }
 

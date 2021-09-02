@@ -1,44 +1,33 @@
 import ValidationHelper from '../helpers/ValidationHelper.js';
-import printError from '../helpers/PrintError.js';
 
 class ValidationMiddleware {
 	async registerValidation(req, res, next) {
-		try {
-			const { email, login, name, password, birthDate, country } = req.body;
+		const { email, login, name, password, birthDate, country } = req.body;
 
-			ValidationHelper.registerAllFieldsValidation({
-				email,
-				login,
-				name,
-				password,
-				birthDate,
-				country,
-			});
-			return next();
-		} catch (e) {
-			printError(e, 'ValidationMiddleware registerValidation');
-
-			return res
-				.status(422)
-				.json({ Error: 'Validation error, fill all inputs with right data' });
-		}
+		ValidationHelper.registerAllFieldsValidation({
+			email,
+			login,
+			name,
+			password,
+			birthDate,
+			country,
+		});
+		return next();
 	}
-	async loginValidation(req, res, next) {
-		try {
-			const { emailOrLogin, password } = req.body;
+	async authorizeValidation(req, res, next) {
+		const { emailOrLogin, password } = req.body;
 
-			ValidationHelper.loginAllFieldsValidation({
-				emailOrLogin,
-				password,
-			});
-			return next();
-		} catch (e) {
-			printError(e, 'ValidationMiddleware loginValidation');
+		ValidationHelper.loginAllFieldsValidation({
+			emailOrLogin,
+			password,
+		});
+		return next();
+	}
+	async loginOrEmailValidation(req, res, next) {
+		const { emailOrLogin } = req.params;
 
-			return res
-				.status(422)
-				.json({ Error: 'Validation error, fill all inputs with right data' });
-		}
+		ValidationHelper.loginValidation(emailOrLogin);
+		return next();
 	}
 }
 

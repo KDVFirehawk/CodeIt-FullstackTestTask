@@ -25,8 +25,10 @@ Content-Type: application/json
 GET http://localhost:3000/api/users
 ###
 
-GET http://localhost:3000/api/user/anton@gmail.com
+GET http://localhost:3000/api/user/anton1Login
 ###
 
-DELETE http://localhost:3000/api/logout/29
+POST http://localhost:3000/api/logout/33
 ###
+
+GET http://localhost:3000/api/countries

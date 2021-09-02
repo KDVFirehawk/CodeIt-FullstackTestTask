@@ -1,6 +1,5 @@
 import sqlPool from '../database/mySqlConnection.js';
-import printError from '../helpers/PrintError.js';
-import TokenExceptions from '../exceptions/TokenExceptions.js';
+import { NotFoundError } from '../exceptions/Exceptions.js';
 
 /**
  * This class is created for storing Refresh tokens in database
@@ -11,37 +10,22 @@ import TokenExceptions from '../exceptions/TokenExceptions.js';
 
 class TokenDBService {
 	async newRefreshToken(userId, refreshToken) {
-		try {
-			const values = `${userId},'${refreshToken}'`;
+		const values = `${userId},'${refreshToken}'`;
 
-			await sqlPool.execute(`INSERT token(userId, refreshToken) VALUES (${values})`);
-		} catch (e) {
-			printError(e, 'TokenDBService newRefreshToken');
-			return e;
-		}
+		await sqlPool.execute(`INSERT token(userId, refreshToken) VALUES (${values})`);
 	}
+
 	async getRefreshToken(userId) {
-		try {
-			const refreshToken = await sqlPool.execute(
-				`SELECT * FROM token WHERE userId = ${userId}`,
-			);
+		const refreshToken = await sqlPool.execute(`SELECT * FROM token WHERE userId = ${userId}`);
 
-			if (!refreshToken[0].length) TokenExceptions.tokenNotFound();
-			return refreshToken[0][0];
-		} catch (e) {
-			printError(e, 'TokenDBService getRefreshToken');
-			return TokenExceptions.tokenNotFound();
-		}
+		if (!refreshToken[0].length) throw new NotFoundError('Token not found');
+		return refreshToken[0][0];
 	}
+
 	async updateRefreshToken(userId, token) {
-		try {
-			await sqlPool.execute(
-				`UPDATE token SET refreshToken = '${token}' WHERE userId = ${userId}`,
-			);
-		} catch (e) {
-			printError(e, 'TokenDBService updateRefreshToken');
-			return e;
-		}
+		await sqlPool.execute(
+			`UPDATE token SET refreshToken = '${token}' WHERE userId = ${userId}`,
+		);
 	}
 }
 
