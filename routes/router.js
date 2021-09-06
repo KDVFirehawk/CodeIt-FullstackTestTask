@@ -27,7 +27,8 @@ router.post(
 	errorHandler(ValidationMiddleware.authorizeValidation),
 	errorHandler(AuthController.login),
 );
-router.post('/logout/:id', errorHandler(AuthController.logout));
+router.post('/logout', errorHandler(AuthController.logout));
 router.get('/countries', errorHandler(CountryController.getCountries));
+router.get('/refresh', errorHandler(AuthController.refresh));
 
 export default router;

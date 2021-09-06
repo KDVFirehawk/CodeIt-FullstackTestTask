@@ -12,6 +12,11 @@ class SignTokenHelper {
 
 		return { accessToken, refreshToken };
 	}
+
+	async validateToken(token) {
+		const decoded = jwt.verify(token, config.app.jwtSecret);
+		return decoded;
+	}
 }
 
 export default new SignTokenHelper();

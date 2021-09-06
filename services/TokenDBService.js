@@ -9,7 +9,7 @@ import { NotFoundError } from '../exceptions/Exceptions.js';
  */
 
 class TokenDBService {
-	async newRefreshToken(userId, refreshToken) {
+	async addRefreshTokenToDB(userId, refreshToken) {
 		const values = `${userId},'${refreshToken}'`;
 
 		await sqlPool.execute(`INSERT token(userId, refreshToken) VALUES (${values})`);
@@ -19,7 +19,7 @@ class TokenDBService {
 		const refreshToken = await sqlPool.execute(`SELECT * FROM token WHERE userId = ${userId}`);
 
 		if (!refreshToken[0].length) throw new NotFoundError('Token not found');
-		return refreshToken[0][0];
+		return refreshToken[0][0].refreshToken;
 	}
 
 	async updateRefreshToken(userId, token) {

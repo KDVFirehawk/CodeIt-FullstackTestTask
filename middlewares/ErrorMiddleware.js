@@ -11,24 +11,21 @@ const errorHandler = (func) => (req, res, next) =>
 function errorHandlerMiddleware(error, req, res, next) {
 	const { stack, name, message } = error;
 
-	const badRequest = res.status(400);
-	const forbidden = res.status(403);
-	const notFound = res.status(404);
-	const internalServerError = res.status(500);
-
-	const errorResponse = { Error: { Name: name, Message: message } };
+	const errorResponse = { Error: { name, message } };
 	const serverErrorResponse = {
-		Error: { Name: 'ServerError', Message: 'Something went wrong' },
+		Error: { name: 'ServerError', message: 'Something went wrong' },
 	};
 
 	console.log(stack);
 
-	if (error instanceof NotFoundError) return notFound.json(errorResponse);
-	if (error instanceof ValidationError) return badRequest.json(errorResponse);
-	if (error instanceof AlreadyExistsError) return badRequest.json(errorResponse);
-	if (error instanceof AuthorizationError) return forbidden.json(errorResponse);
+	if (error.name === 'JsonWebTokenError') return res.status(403).json(errorResponse);
+	if (error.name === 'TokenExpiredError') return res.status(403).json(errorResponse);
+	if (error instanceof NotFoundError) return res.status(404).json(errorResponse);
+	if (error instanceof ValidationError) return res.status(400).json(errorResponse);
+	if (error instanceof AlreadyExistsError) return res.status(400).json(errorResponse);
+	if (error instanceof AuthorizationError) return res.status(403).json(errorResponse);
 
-	return internalServerError.json(serverErrorResponse);
+	return res.status(500).json(serverErrorResponse);
 }
 
 export { errorHandlerMiddleware, errorHandler };

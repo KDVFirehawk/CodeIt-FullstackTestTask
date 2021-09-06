@@ -1,0 +1,54 @@
+.create-inputs input {
+	color: black !important;
+	font-size: large !important;
+}
+.create-inputs label {
+	color: black !important;
+	font-size: large !important;
+}
+.create-inputs input::placeholder {
+	color: grey !important;
+}
+
+input.yellow-input {
+	border-bottom: 1px solid #fff !important;
+	box-shadow: 0 1px 0 0 #fff !important;
+	color: #fff;
+}
+input.yellow-input + label {
+	color: #fff !important;
+}
+
+input.yellow-input:focus {
+	border-bottom: 1px solid yellow !important;
+	box-shadow: 0 1px 0 0 yellow !important;
+	color: yellow;
+}
+input.yellow-input:focus + label {
+	color: yellow !important;
+}
+
+.row .col {
+	float: none;
+	padding: 0 0;
+}
+.input-field.col label {
+	left: 0;
+	color: #fff;
+}
+.select-wrapper input.select-dropdown {
+	color: #fff;
+}
+.dropdown-content {
+	background-color: green;
+}
+.dropdown-content li > a,
+.dropdown-content li > span {
+	color: white;
+}
+.select-dropdown li.disabled,
+.select-dropdown li.disabled > span,
+.select-dropdown li.optgroup {
+	color: rgba(0, 0, 0);
+	font-weight: bold;
+}

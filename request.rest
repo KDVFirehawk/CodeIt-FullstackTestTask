@@ -1,5 +1,5 @@
 # const { email, login, name, password,birthDate,country } = req.body
-POST http://localhost:3000/api/register
+POST http://localhost:5000/api/register
 Content-Type: application/json
 
 {
@@ -13,7 +13,7 @@ Content-Type: application/json
 ###
 
 # const { email / login, password } = req.body
-POST http://localhost:3000/api/login
+POST http://localhost:5000/api/login
 Content-Type: application/json
 
 {
@@ -22,13 +22,18 @@ Content-Type: application/json
 }
 
 ###
-GET http://localhost:3000/api/users
+GET http://localhost:5000/api/users
 ###
 
-GET http://localhost:3000/api/user/anton1Login
+GET http://localhost:5000/api/user/antonLogin
 ###
 
-POST http://localhost:3000/api/logout/33
+POST http://localhost:5000/api/logout
+Content-Type: application/json
+
+{
+    "userId":"33"
+}
 ###
 
-GET http://localhost:3000/api/countries
+GET http://localhost:5000/api/countries

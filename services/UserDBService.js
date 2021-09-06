@@ -72,7 +72,7 @@ class UserDBService {
 			login: user.login,
 			name: user.name,
 			country: user.country,
-			birthdate: user.birthdate,
+			birthDate: user.birthdate,
 		};
 	}
 }

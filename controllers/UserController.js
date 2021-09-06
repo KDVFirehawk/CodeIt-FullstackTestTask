@@ -1,4 +1,5 @@
 import UserDBService from '../services/UserDBService.js';
+import config from '../config.js';
 
 class UserController {
 	async getUsers(req, res) {
@@ -8,7 +9,6 @@ class UserController {
 	async getUser(req, res) {
 		const { emailOrLogin } = req.params;
 		const user = await UserDBService.getUser(emailOrLogin);
-
 		return res.json({ user });
 	}
 }

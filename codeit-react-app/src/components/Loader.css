@@ -1,0 +1,11 @@
+.preloader-wrapper {
+	display: flex;
+	margin-right: auto;
+	margin-left: auto;
+	margin-top: 15vh;
+	height: 10rem !important;
+	width: 10rem !important;
+}
+.circle {
+	border-width: 1rem !important;
+}

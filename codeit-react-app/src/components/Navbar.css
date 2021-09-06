@@ -1,0 +1,13 @@
+/* .login,
+.logout {
+	margin-left: 3vw;
+}
+*/
+.nav-wrapper {
+	margin-right: 15vw;
+	margin-left: 15vw;
+	width: 70vw;
+}
+nav div a {
+	font-size: large;
+}

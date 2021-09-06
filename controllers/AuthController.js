@@ -1,7 +1,8 @@
 import UserDBService from '../services/UserDBService.js';
 import TokenDBService from '../services/TokenDBService.js';
-import SignTokenHelper from '../helpers/SignTokenHelper.js';
+import TokenHelper from '../helpers/TokenHelper.js';
 import { AlreadyExistsError } from '../exceptions/Exceptions.js';
+import config from '../config.js';
 
 class AuthController {
 	async register(req, res) {
@@ -19,7 +20,7 @@ class AuthController {
 			country,
 		});
 
-		const { accessToken, refreshToken } = await SignTokenHelper.newAccessRefresh({
+		const { accessToken, refreshToken } = await TokenHelper.newAccessRefresh({
 			email,
 			login,
 			name,
@@ -29,12 +30,13 @@ class AuthController {
 
 		const createdUser = await UserDBService.getUser(email);
 
-		await TokenDBService.newRefreshToken(createdUser.userId, refreshToken);
+		await TokenDBService.addRefreshTokenToDB(createdUser.userId, refreshToken);
+
+		res.cookie('refreshToken', refreshToken, config.cookieRefreshToken);
 
 		return res.json({
 			user: createdUser,
 			accessToken,
-			refreshToken,
 		});
 	}
 
@@ -45,7 +47,8 @@ class AuthController {
 
 		const user = await UserDBService.getUser(emailOrLogin);
 
-		const { accessToken, refreshToken } = await SignTokenHelper.newAccessRefresh({
+		const { accessToken, refreshToken } = await TokenHelper.newAccessRefresh({
+			userId: user.userId,
 			email: user.email,
 			login: user.login,
 			name: user.name,
@@ -56,19 +59,51 @@ class AuthController {
 
 		const userSafeInfo = await UserDBService.getUser(user.email);
 
+		res.cookie('refreshToken', refreshToken, config.cookieRefreshToken);
+
 		return res.json({
 			user: userSafeInfo,
 			accessToken,
-			refreshToken,
 		});
 	}
 
 	async logout(req, res) {
-		const { id } = req.params;
+		const { userId } = req.body;
 
-		await TokenDBService.getRefreshToken(id);
-		await TokenDBService.updateRefreshToken(id, null);
+		/**
+		 * Get refresh token used for check is token exists?
+		 * If token does not exist => get error NotFoundError
+		 * If no errors occured => token updates
+		 */
+		await TokenDBService.getRefreshToken(userId);
+		await TokenDBService.updateRefreshToken(userId, null);
 		res.status(200).end();
+	}
+
+	async refresh(req, res) {
+		const { refreshToken } = req.cookies;
+
+		const decodedRefreshToken = await TokenHelper.validateToken(refreshToken);
+		const refreshTokenFromDB = await TokenDBService.getRefreshToken(decodedRefreshToken.userId);
+		if (refreshToken !== refreshTokenFromDB)
+			return res.status(403).json({ Error: { name: 'JsonWebTokenError' } });
+
+		const userSafeInfo = await UserDBService.getUser(decodedRefreshToken.email);
+
+		const { accessToken, refreshToken: newRefreshToken } = await TokenHelper.newAccessRefresh({
+			userId: userSafeInfo.userId,
+			email: userSafeInfo.email,
+			login: userSafeInfo.login,
+			name: userSafeInfo.name,
+			country: userSafeInfo.country,
+		});
+		await TokenDBService.updateRefreshToken(userSafeInfo.userId, newRefreshToken);
+
+		res.cookie('refreshToken', newRefreshToken, config.cookieRefreshToken);
+		return res.json({
+			user: userSafeInfo,
+			accessToken,
+		});
 	}
 }
 
